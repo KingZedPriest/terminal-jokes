@@ -12,33 +12,38 @@ import (
 )
 
 var (
-	app      *tview.Application
-	textView *tview.TextView
+	app         *tview.Application
+	textView    *tview.TextView
+	jokeRefresh *time.Ticker
 )
 
 type Payload struct {
-	Value string
+	Value string `json:"value"`
 }
 
 func getAndDrawJoke() {
-	// Fetch joke from the web
 	result, err := http.Get("https://api.chucknorris.io/jokes/random?category=science")
 	if err != nil {
-		panic(err)
+		textView.SetText(fmt.Sprintf("Error fetching joke: %v", err))
+		app.Draw()
+		return
 	}
 
 	payloadBytes, err := io.ReadAll(result.Body)
 	if err != nil {
-		panic(err)
+		textView.SetText(fmt.Sprintf("Error reading joke data: %v", err))
+		app.Draw()
+		return
 	}
 
 	payload := &Payload{}
 	err = json.Unmarshal(payloadBytes, payload)
 	if err != nil {
-		panic(err)
+		textView.SetText(fmt.Sprintf("Error parsing joke data: %v", err))
+		app.Draw()
+		return
 	}
 
-	//Update the UI with the joke
 	textView.Clear()
 	fmt.Fprintln(textView, payload.Value)
 	timeStr := fmt.Sprintf("\n\n[gray]%s", time.Now().Format(time.RFC1123))
@@ -46,10 +51,10 @@ func getAndDrawJoke() {
 }
 
 func refreshJoke() {
-	tick := time.NewTicker(time.Second * 30)
+	jokeRefresh = time.NewTicker(time.Second * 30)
 	for {
 		select {
-		case <-tick.C:
+		case <-jokeRefresh.C:
 			getAndDrawJoke()
 			app.Draw()
 		}
@@ -59,15 +64,44 @@ func refreshJoke() {
 func main() {
 	app = tview.NewApplication()
 
+	// Define colors
+	textColor := tcell.ColorWhite
+	headerColor := tcell.ColorLightCyan
+	footerColor := tcell.ColorGray
+
+	// Create text views
+	header := tview.NewTextView().
+		SetTextAlign(tview.AlignCenter).
+		SetText("[::b][white]Chuck Norris Joke Teller!  [::-]").
+		SetTextColor(headerColor).
+		SetDynamicColors(true)
+
 	textView = tview.NewTextView().
 		SetDynamicColors(true).
 		SetWrap(true).
 		SetTextAlign(tview.AlignCenter).
-		SetTextColor(tcell.ColorLime)
+		SetTextColor(textColor)
 
+	footer := tview.NewTextView().
+		SetTextAlign(tview.AlignCenter).
+		SetText("[::b][gray]A Chuck Norris joke app for your terminal. [::-]").
+		SetTextColor(footerColor).
+		SetDynamicColors(true)
+
+	// Create grid
+	grid := tview.NewGrid().
+		SetRows(3, 0, 3).
+		SetColumns(30, 0, 30).
+		SetBorders(true).
+		AddItem(header, 0, 0, 1, 3, 0, 0, false).
+		AddItem(textView, 1, 0, 1, 3, 0, 0, false).
+		AddItem(footer, 2, 0, 1, 3, 0, 0, false)
+
+	// Start joke fetching and refreshing
+	getAndDrawJoke()
 	go refreshJoke()
 
-	if err := app.SetRoot(textView, true).Run(); err != nil {
+	if err := app.SetRoot(grid, true).SetFocus(grid).Run(); err != nil {
 		panic(err)
 	}
 }
