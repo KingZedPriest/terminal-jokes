@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/gdamore/tcell/v2"
 	"github.com/rivo/tview"
 )
 
@@ -45,7 +46,7 @@ func getAndDrawJoke() {
 }
 
 func refreshJoke() {
-	tick := time.NewTicker(time.Second * 5)
+	tick := time.NewTicker(time.Second * 30)
 	for {
 		select {
 		case <-tick.C:
@@ -62,7 +63,7 @@ func main() {
 		SetDynamicColors(true).
 		SetWrap(true).
 		SetTextAlign(tview.AlignCenter).
-		SetText("First Go App")
+		SetTextColor(tcell.ColorLime)
 
 	go refreshJoke()
 
