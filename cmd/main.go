@@ -84,7 +84,7 @@ func main() {
 
 	footer := tview.NewTextView().
 		SetTextAlign(tview.AlignCenter).
-		SetText("[::b][gray]A Chuck Norris joke app for your terminal. [::-]").
+		SetText("[::b][gray]A Chuck Norris joke app for your terminal. Refreshes every 30 seconds. [::-]").
 		SetTextColor(footerColor).
 		SetDynamicColors(true)
 
