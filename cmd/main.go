@@ -52,12 +52,9 @@ func getAndDrawJoke() {
 
 func refreshJoke() {
 	jokeRefresh = time.NewTicker(time.Second * 30)
-	for {
-		select {
-		case <-jokeRefresh.C:
-			getAndDrawJoke()
-			app.Draw()
-		}
+	for range jokeRefresh.C {
+		getAndDrawJoke()
+		app.Draw()
 	}
 }
 
